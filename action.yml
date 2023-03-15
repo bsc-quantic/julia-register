@@ -1,0 +1,96 @@
+name: Register Julia package
+description: Register Julia package in a private registry
+inputs:
+  registry:
+    description: URL of the private registry (without the 'https://' prefix)
+    required: true
+  push:
+    description: If true, push to a custom branch in the registry
+    required: true
+    default: true
+  botname:
+    description: Name of the bot requesting the registration
+    required: true
+    default: 'github-actions[bot]'
+  botemail:
+    description: Email address of the bot requesting the PR registration
+    required: true
+    default: '41898282+github-actions[bot]@users.noreply.github.com'
+  branch:
+    description: If `inputs.push=true`, branch where the registering package will be uploaded.
+    required: false
+outputs:
+  name:
+    description: Project name
+    value: ${{ steps.register-package.outputs.name }}
+  uuid:
+    description: Project UUID
+    value: ${{ steps.register-package.outputs.uuid }}
+  version:
+    description: Project version
+    value: ${{ steps.register-package.outputs.version }}
+  hash:
+    description: Tree hash of the registering package
+    value: ${{ steps.register-package.outputs.hash }}
+  branch:
+    description: If `inputs.push=true`, branch where the registering package will be uploaded
+    value: ${{ steps.register-package.outputs.branch }}
+  path:
+    description: Path to the local registry.
+    value: ${{ steps.register-package.outputs.path }}
+runs:
+  using: "composite"
+  steps:
+    - name: Install RegistryTools
+      run: julia -e 'using Pkg; Pkg.add("RegistryTools")'
+    - name: Register package
+      id: register-package
+      run: |
+        julia -e '
+          using Logging
+          using Pkg
+          using RegistryTools
+
+          project = RegistryTools.Project("Project.toml")
+          isnothing(project) && error("Project file not found")
+          @info "Project: $(project.name) = \"(project.uuid)\" @ $(project.version)"
+
+          tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
+          @info "Tree hash: $tree_hash"
+
+          const private_reg_url = "https://${{ inputs.registry }}"
+          const general_reg_url = "https://github.com/JuliaRegistries/General"
+          @info "Registry: $private_reg_url"
+
+          const branch = get(ENV, "INPUTS_BRANCH", "register/$(project.name)/$(project.version)")
+
+          cd(mktempdir()) do
+            # taken from fregante/setup-git-user@v1, https://stackoverflow.com/a/71984173
+            regbranch = RegistryTools.register(pkg_url, project, tree_hash;
+              registry = private_reg_url,
+              registry_deps = [general_reg_url],
+              push = ${{ inputs.push }},
+              branch = branch,
+              gitconfig = Dict(
+                "user.name" => "${{ inputs.name }}",
+                "user.email" => "${{ inputs.email }}",
+                "url.https://${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])@${{ inputs.registry }}.insteadOf" => private_reg_url
+              ))
+            @info regbranch
+            if haskey(regbranch.metadata, "error")
+              error(regbranch.metadata["error"])
+            end
+          end
+
+          regspec = RegistrySpec(name="") # TODO
+          registry = Pkg.Registry.find_installed_registries(stdout, [regspec])
+
+          open(ENV["GITHUB_OUTPUT"],"w") do io
+            println(io, "name=$(project.name)")
+            println(io, "uuid=$(project.uuid)")
+            println(io, "version=$(project.version)")
+            println(io, "hash=$tree_hash")
+            println(io, "branch=$branch")
+            println(io, "path=$(registry.path)")
+          end
+        '
