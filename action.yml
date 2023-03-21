@@ -1,11 +1,8 @@
 name: Register Julia package
 description: Register Julia package in a private registry
 inputs:
-  registry_name:
-    description: Name of the private registry
-    required: true
-  registry_url:
-    description: URL of the private registry (without the 'https://' prefix)
+  registry:
+    description: URL of the private registry
     required: true
   push:
     description: If true, push to a custom branch in the registry
@@ -44,9 +41,14 @@ outputs:
 runs:
   using: "composite"
   steps:
-    - name: Install RegistryTools
+    - name: Install dependencies
       shell: bash
-      run: julia -e 'using Pkg; Pkg.add("RegistryTools")'
+      run: |
+        julia -e '
+          using Pkg
+          Pkg.add("RegistryTools")
+          Pkg.add("HTTP")
+        '
     - name: Register package
       id: register-package
       shell: bash
@@ -55,11 +57,10 @@ runs:
           using Logging
           using Pkg
           using RegistryTools
+          using HTTP: URI
+          using LibGit2
 
           pkg_url = String(readchomp(`git remote get-url origin`))
-          if !endswith(pkg_url, ".git")
-            pkg_url *= ".git"
-          end
           @info "Package URL: $pkg_url"
 
           project = RegistryTools.Project("Project.toml")
@@ -69,14 +70,14 @@ runs:
           tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
           @info "Tree hash: $tree_hash"
 
-          const private_reg_url = "https://${{ inputs.registry_url }}"
+          const private_reg_url = GitTools.normalize_url("${{ inputs.registry }}")
           const general_reg_url = "https://github.com/JuliaRegistries/General"
           @info "Registry: $private_reg_url"
 
           const branch = get(ENV, "INPUTS_BRANCH", "register/$(project.name)/$(project.version)")
 
           cd(mktempdir()) do
-            # taken from fregante/setup-git-user@v1, https://stackoverflow.com/a/71984173
+            # adapted from fregante/setup-git-user@v1, https://stackoverflow.com/a/71984173
             regbranch = RegistryTools.register(pkg_url, project, tree_hash;
               registry = private_reg_url,
               registry_deps = [general_reg_url],
@@ -85,7 +86,7 @@ runs:
               gitconfig = Dict(
                 "user.name" => "${{ inputs.name }}",
                 "user.email" => "${{ inputs.email }}",
-                "url.https://${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])@${{ inputs.registry_url }}.insteadOf" => private_reg_url
+                "url.$(string(URI(URI(private_reg_url); userinfo="${{ inputs.botname }}:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
               ))
             @info regbranch
             if haskey(regbranch.metadata, "error")
@@ -93,9 +94,8 @@ runs:
             end
           end
 
-          regspec = RegistrySpec(name="${{ inputs.registry_name }}")
-          registry = Pkg.Registry.find_installed_registries(stdout, [regspec])
-          @info registry
+          registry_repo = RegistryTools.get_registry(private_reg_url; force_reset=false)
+          @info registry_repo
 
           open(ENV["GITHUB_OUTPUT"],"w") do io
             println(io, "name=$(project.name)")
@@ -103,6 +103,6 @@ runs:
             println(io, "version=$(project.version)")
             println(io, "hash=$tree_hash")
             println(io, "branch=$branch")
-            println(io, "path=$(registry.path)")
+            println(io, "path=$(LibGit2.path(registry_repo))")
           end
         '
