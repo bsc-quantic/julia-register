@@ -85,7 +85,7 @@ runs:
             end
           end
 
-          regspec = RegistrySpec(name="${{ inputs.registry_name }}") # TODO
+          regspec = RegistrySpec(name="${{ inputs.registry_name }}")
           registry = Pkg.Registry.find_installed_registries(stdout, [regspec])
 
           open(ENV["GITHUB_OUTPUT"],"w") do io
