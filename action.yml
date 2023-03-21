@@ -1,7 +1,10 @@
 name: Register Julia package
 description: Register Julia package in a private registry
 inputs:
-  registry:
+  registry_name:
+    description: Name of the private registry
+    required: true
+  registry_url:
     description: URL of the private registry (without the 'https://' prefix)
     required: true
   push:
@@ -58,7 +61,7 @@ runs:
           tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
           @info "Tree hash: $tree_hash"
 
-          const private_reg_url = "https://${{ inputs.registry }}"
+          const private_reg_url = "https://${{ inputs.registry_url }}"
           const general_reg_url = "https://github.com/JuliaRegistries/General"
           @info "Registry: $private_reg_url"
 
@@ -74,7 +77,7 @@ runs:
               gitconfig = Dict(
                 "user.name" => "${{ inputs.name }}",
                 "user.email" => "${{ inputs.email }}",
-                "url.https://${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])@${{ inputs.registry }}.insteadOf" => private_reg_url
+                "url.https://${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])@${{ inputs.registry_url }}.insteadOf" => private_reg_url
               ))
             @info regbranch
             if haskey(regbranch.metadata, "error")
@@ -82,7 +85,7 @@ runs:
             end
           end
 
-          regspec = RegistrySpec(name="") # TODO
+          regspec = RegistrySpec(name="${{ inputs.registry_name }}") # TODO
           registry = Pkg.Registry.find_installed_registries(stdout, [regspec])
 
           open(ENV["GITHUB_OUTPUT"],"w") do io
