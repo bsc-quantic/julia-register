@@ -87,6 +87,7 @@ runs:
 
           regspec = RegistrySpec(name="${{ inputs.registry_name }}")
           registry = Pkg.Registry.find_installed_registries(stdout, [regspec])
+          @info registry
 
           open(ENV["GITHUB_OUTPUT"],"w") do io
             println(io, "name=$(project.name)")
