@@ -1,5 +1,5 @@
-name: Register Julia package
-description: Register Julia package in a private registry
+name: Register Julia package on private registry
+description: Like Registrator but for federated registries
 branding:
   icon: 'package'
   color: 'purple'
