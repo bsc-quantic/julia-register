@@ -45,9 +45,11 @@ runs:
   using: "composite"
   steps:
     - name: Install RegistryTools
+      shell: bash
       run: julia -e 'using Pkg; Pkg.add("RegistryTools")'
     - name: Register package
       id: register-package
+      shell: bash
       run: |
         julia -e '
           using Logging
