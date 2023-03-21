@@ -64,7 +64,7 @@ runs:
 
           project = RegistryTools.Project("Project.toml")
           isnothing(project) && error("Project file not found")
-          @info "Project: $(project.name) = \"(project.uuid)\" @ $(project.version)"
+          @info "Project: $(project.name) = $(project.uuid) @ $(project.version)"
 
           tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
           @info "Tree hash: $tree_hash"
