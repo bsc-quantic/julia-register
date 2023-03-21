@@ -1,5 +1,8 @@
 name: Register Julia package
 description: Register Julia package in a private registry
+branding:
+  icon: 'package'
+  color: 'purple'
 inputs:
   registry:
     description: URL of the private registry
