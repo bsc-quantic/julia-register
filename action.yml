@@ -56,6 +56,7 @@ runs:
         julia -e '
           using Logging
           using Pkg
+          using Pkg: GitTools
           using RegistryTools
           using HTTP: URI
           using LibGit2
