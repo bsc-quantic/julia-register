@@ -91,7 +91,7 @@ runs:
               ))
             @info regbranch
             if haskey(regbranch.metadata, "error")
-              if regbranch.metadata["kind"] == "New version" && regbranch.metadata["error"] == "New version $(project.version) already exists"
+              if regbranch.metadata["kind"] == "New version" && regbranch.metadata["error"] == "Version $(project.version) already exists"
                 println("::warning file=Project.toml::Version $(project.version) already exists")
               else
                 println("::error file=Project.toml,title=$(regbranch.metadata["kind"])::$(regbranch.metadata["error"])")
