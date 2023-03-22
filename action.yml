@@ -11,11 +11,11 @@ inputs:
     description: If true, push to a custom branch in the registry
     required: true
     default: true
-  botname:
+  name:
     description: Name of the bot requesting the registration
     required: true
     default: 'github-actions[bot]'
-  botemail:
+  email:
     description: Email address of the bot requesting the PR registration
     required: true
     default: '41898282+github-actions[bot]@users.noreply.github.com'
