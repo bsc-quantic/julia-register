@@ -90,7 +90,7 @@ runs:
               gitconfig = Dict(
                 "user.name" => "${{ inputs.name }}",
                 "user.email" => "${{ inputs.email }}",
-                "url.$(string(URI(URI(private_reg_url); userinfo="${{ inputs.botname }}:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
+                "url.$(string(URI(URI(private_reg_url); userinfo="${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
               ))
             @info regbranch
             if haskey(regbranch.metadata, "error")
