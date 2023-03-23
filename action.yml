@@ -98,6 +98,7 @@ runs:
                 println("::warning file=Project.toml::Version $(project.version) already exists")
               else
                 println("::error file=Project.toml,title=$(regbranch.metadata["kind"])::$(regbranch.metadata["error"])")
+                error(regbranch.metadata["error"])
               end
             end
           end
