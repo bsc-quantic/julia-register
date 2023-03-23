@@ -78,7 +78,7 @@ runs:
           const general_reg_url = "https://github.com/JuliaRegistries/General"
           @info "Registry: $private_reg_url"
 
-          const branch = get(ENV, "INPUTS_BRANCH", "register/$(project.name)/$(project.version)")
+          const branch = get(ENV, "INPUTS_BRANCH", RegistryTools.registration_branch(project; url=pkg_url))
 
           cd(mktempdir()) do
             # adapted from fregante/setup-git-user@v1, https://stackoverflow.com/a/71984173
