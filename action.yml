@@ -118,4 +118,21 @@ runs:
             println(io, "branch=$branch")
             println(io, "path=$(LibGit2.path(registry_repo))")
           end
+
+          open(ENV["GITHUB_STEP_SUMMARY"], "w") do io
+            println(io, """
+              # Package registered :package:
+
+              - Registry: $private_reg_url
+              - Project: $(project.name)
+                - UUID: $(project.uuid)
+                - Version: $(project.version)
+
+              ## Commit message
+
+              ```git
+              $(readchomp(`git -C $(LibGit2.path(registry_repo)) log --pretty=%B $branch`))
+              ```
+            """)
+          end
         '
