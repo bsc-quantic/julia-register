@@ -9,11 +9,14 @@ You can think of it as the official [Register Julia Package](https://github.com/
 ### Inputs
 
 - `registry`: GitHub URL to the private registry.
-- `push`: If `true`, push the branch to the registry. Defaults to `true`.
-  - NOTE Be sure that the used `GITHUB_TOKEN` has the needed permissions.
+- `push`: Optional. If `true`, push the branch to the registry. Defaults to `true`.
+  - Defaults to `true`.
 - `branch`: Optional. If `inputs.push=true`, branch name where the registering package will be uploaded.
-- `name`: Name of the registering user. Defaults to `github-actions[bot]`.
-- `email`: Email of the registering user. Defaults to `41898282+github-actions[bot]@users.noreply.github.com`.
+  - Defaults to the string returned by `RegistryTools.registration_branch`.
+- `name`: Optional. Name of the committing user.
+  - Defaults to `github-actions[bot]`.
+- `email`: Optional. Email of the committing user.
+  - Defaults to `41898282+github-actions[bot]@users.noreply.github.com`.
 
 ### Outputs
 
@@ -25,8 +28,6 @@ You can think of it as the official [Register Julia Package](https://github.com/
 - `path`: Path to the locally cloned Git repository of the private registry.
 
 ## Example workflow
-
-Most probably, you will need a Personal Access Token (PAT) configured with _Contents_ permissions on the registry repository.
 
 ```yaml
 name: Register Package
@@ -44,3 +45,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_PAT }}
 ```
+
+## Troubleshooting
+
+Most probably, you will need a Personal Access Token (PAT) configured with _Contents_ permissions on the registry repository. If not, the GitHub action won't be able to push the branch to the registry repository.
