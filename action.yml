@@ -57,7 +57,6 @@ runs:
       shell: bash
       run: |
         julia -e '
-          using Logging
           using Pkg
           using Pkg: GitTools
           using RegistryTools
@@ -65,20 +64,26 @@ runs:
           using LibGit2
 
           pkg_url = String(readchomp(`git remote get-url origin`))
-          @info "Package URL: $pkg_url"
+          println("::debug::Repository = $pkg_url")
 
           project = RegistryTools.Project("Project.toml")
           isnothing(project) && error("Project file not found")
-          @info "Project: $(project.name) = $(project.uuid) @ $(project.version)"
+          println("::debug::Project name = $(project.name)")
+          println("::debug::Project UUID = $(project.uuid)")
+          println("::debug::Project version = $(project.version)")
 
           tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
-          @info "Tree hash: $tree_hash"
+          println("::debug::Tree hash = $tree_hash")
 
           const private_reg_url = GitTools.normalize_url("${{ inputs.registry }}")
           const general_reg_url = "https://github.com/JuliaRegistries/General"
-          @info "Registry: $private_reg_url"
+          println("::debug::Registry = $private_reg_url")
+
+          registry_repo = RegistryTools.get_registry(private_reg_url; force_reset=false)
+          println("::debug::Registry path = $registry_repo")
 
           const branch = get(ENV, "INPUTS_BRANCH", RegistryTools.registration_branch(project; url=pkg_url))
+          println("::debug::Registry branch = $branch")
 
           cd(mktempdir()) do
             # adapted from fregante/setup-git-user@v1, https://stackoverflow.com/a/71984173
@@ -92,19 +97,17 @@ runs:
                 "user.email" => "${{ inputs.email }}",
                 "url.$(string(URI(URI(private_reg_url); userinfo="${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
               ))
-            @info regbranch
+            println("::debug::RegBranch = $regbranch")
+
             if haskey(regbranch.metadata, "error")
               if regbranch.metadata["kind"] == "New version" && regbranch.metadata["error"] == "Version $(project.version) already exists"
-                println("::warning file=Project.toml::Version $(project.version) already exists")
+                println("::warning file=Project.toml,line=3,col=11,endColumn=$(11 + 1 + length(string(project.version))),title=Package not registered::Version $(project.version) already exists")
               else
                 println("::error file=Project.toml,title=$(regbranch.metadata["kind"])::$(regbranch.metadata["error"])")
                 error(regbranch.metadata["error"])
               end
             end
           end
-
-          registry_repo = RegistryTools.get_registry(private_reg_url; force_reset=false)
-          @info registry_repo
 
           open(ENV["GITHUB_OUTPUT"],"w") do io
             println(io, "name=$(project.name)")
