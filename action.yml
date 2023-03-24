@@ -102,6 +102,7 @@ runs:
             if haskey(regbranch.metadata, "error")
               if regbranch.metadata["kind"] == "New version" && regbranch.metadata["error"] == "Version $(project.version) already exists"
                 println("::warning file=Project.toml,line=3,col=11,endColumn=$(11 + 1 + length(string(project.version))),title=Package not registered::Version $(project.version) already exists")
+                return 0
               else
                 println("::error file=Project.toml,title=$(regbranch.metadata["kind"])::$(regbranch.metadata["error"])")
                 error(regbranch.metadata["error"])
