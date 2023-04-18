@@ -127,12 +127,6 @@ runs:
               - Project: $(project.name)
                 - UUID: $(project.uuid)
                 - Version: $(project.version)
-
-              ## Commit message
-
-              ```git
-              $(readchomp(`git -C $(LibGit2.path(registry_repo)) log --pretty=%B $branch`))
-              ```
             """)
           end
         '
