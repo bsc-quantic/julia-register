@@ -99,12 +99,12 @@ open(ENV["GITHUB_STEP_SUMMARY"], "w") do io
     println(
         io,
         """
-    # Package registered :package:
+        # Package registered :package:
 
-    - Registry: $private_reg_url
-    - Project: $(project.name)
-    - UUID: $(project.uuid)
-    - Version: $(project.version)
-"""
+        - Registry: $private_reg_url
+        - Project: $(project.name)
+        - UUID: $(project.uuid)
+        - Version: $(project.version)
+        """
     )
 end
