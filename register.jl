@@ -1,14 +1,19 @@
 using Pkg
 using Pkg: GitTools
+using GitHub
+using Registrator
 using RegistryTools
 using HTTP: URI
 using LibGit2
 
 # ARGS
-# 1. inputs.name
-# 2. inputs.email
-# 3. inputs.registry
+# 1. inputs.registry
+# 2. inputs.name
+# 3. inputs.email
 # 4. inputs.push
+# 5. github.actor
+registry, name, email, push, actor = ARGS
+push = parse(Bool, push)
 
 pkg_url = String(readchomp(`git remote get-url origin`))
 println("::info::Repository = $pkg_url")
@@ -19,10 +24,13 @@ println("::info::Project name = $(project.name)")
 println("::info::Project UUID = $(project.uuid)")
 println("::info::Project version = $(project.version)")
 
+commit_hash = String(readchomp(`git rev-parse HEAD`))
+println("::info::Commit hash = $commit_hash")
+
 tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
 println("::info::Tree hash = $tree_hash")
 
-const private_reg_url = GitTools.normalize_url(ARGS[3])
+const private_reg_url = GitTools.normalize_url(string(repo(registry).html_url))
 const general_reg_url = "https://github.com/JuliaRegistries/General"
 println("::info::Registry = $private_reg_url")
 
@@ -37,12 +45,12 @@ cd(mktempdir()) do
     regbranch = RegistryTools.register(pkg_url, project, tree_hash;
         registry=private_reg_url,
         registry_deps=[general_reg_url],
-        push=parse(Bool, ARGS[4]),
+        push=push,
         branch=branch,
         gitconfig=Dict(
-            "user.name" => ARGS[1],
-            "user.email" => ARGS[2],
-            "url.$(string(URI(URI(private_reg_url); userinfo="$(ARGS[1]):$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
+            "user.name" => name,
+            "user.email" => email,
+            "url.$(string(URI(URI(private_reg_url); userinfo="$name:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
         ))
     println("::info::RegBranch = $regbranch")
 
@@ -55,6 +63,27 @@ cd(mktempdir()) do
             error(regbranch.metadata["error"])
         end
     end
+
+    # open pull request
+    title, body = Registrator.pull_request_contents(
+        registration_type=get(regbranch.metadata, "kind", ""),
+        package=project.name,
+        repo=pkg_url,
+        user=actor,
+        version=project.version,
+        commit=commit_hash,
+        release_notes="",
+    )
+
+    pr = GitHub.create_pull_request(
+        registry;
+        title=title,
+        body=body,
+        head=branch,
+        base="master"
+    )
+
+    GitHub.add_labels(repo, pr, lowercase.(regbranch.metadata["labels"]))
 end
 
 open(ENV["GITHUB_OUTPUT"], "w") do io

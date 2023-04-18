@@ -5,12 +5,8 @@ branding:
   color: 'purple'
 inputs:
   registry:
-    description: URL of the private registry
+    description: Repository of the private registry
     required: true
-  push:
-    description: If true, push to a custom branch in the registry
-    required: true
-    default: true
   name:
     description: Name of the bot requesting the registration
     required: true
@@ -19,6 +15,10 @@ inputs:
     description: Email address of the bot requesting the PR registration
     required: true
     default: '41898282+github-actions[bot]@users.noreply.github.com'
+  push:
+    description: If true, push to a custom branch in the registry
+    required: true
+    default: true
   branch:
     description: If `inputs.push=true`, branch where the registering package will be uploaded.
     required: false
@@ -50,9 +50,11 @@ runs:
         julia -e '
           using Pkg
           Pkg.add("RegistryTools")
+          Pkg.add("Registrator")
+          Pkg.add("GitHub")
           Pkg.add("HTTP")
         '
     - name: Register package
       id: register-package
       shell: bash
-      run: julia ${{ github.action_path }}/register.jl ${{ inputs.name }} ${{ inputs.email }} ${{ inputs.registry }} ${{ inputs.push }}
+      run: julia ${{ github.action_path }}/register.jl ${{ inputs.registry }} ${{ inputs.name }} ${{ inputs.email }} ${{ inputs.push }} ${{ github.actor }}
