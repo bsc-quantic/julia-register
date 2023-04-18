@@ -60,7 +60,9 @@ cd(mktempdir()) do
     end
 
     # open pull request
-    title, body = Registrator.pull_request_contents(
+    params = Dict("base" => "master", "head" => branch, "maintainer_can_modify" => true)
+
+    params["title"], params["body"] = Registrator.pull_request_contents(
         registration_type=get(regbranch.metadata, "kind", ""),
         package=project.name,
         repo=pkg_url,
@@ -69,15 +71,9 @@ cd(mktempdir()) do
         commit=commit_hash,
         release_notes="",
     )
-    @info "Pull Request contents" title = title body = body
+    @info "Pull Request contents" title = params["title"] body = params["body"]
 
-    pr = GitHub.create_pull_request(
-        registry;
-        title=title,
-        body=body,
-        head=branch,
-        base="master"
-    )
+    pr = GitHub.create_pull_request(registry, params=params)
 
     GitHub.add_labels(repo, pr, lowercase.(regbranch.metadata["labels"]))
 end
