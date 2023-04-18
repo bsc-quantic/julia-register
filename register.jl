@@ -73,9 +73,9 @@ cd(mktempdir()) do
     )
     @info "Pull Request contents" title = params["title"] body = params["body"]
 
-    pr = GitHub.create_pull_request(registry, params=params)
-
-    GitHub.add_labels(repo, pr, lowercase.(regbranch.metadata["labels"]))
+    auth = GitHub.get_user_auth()
+    pr = GitHub.create_pull_request(registry, auth=auth, params=params)
+    GitHub.add_labels(repo, pr, lowercase.(regbranch.metadata["labels"]), auth=auth)
 end
 
 open(ENV["GITHUB_OUTPUT"], "w") do io
