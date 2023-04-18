@@ -55,4 +55,4 @@ runs:
     - name: Register package
       id: register-package
       shell: bash
-      run: julia ${{ github.action_path }}/register.jl
+      run: julia ${{ github.action_path }}/register.jl ${{ inputs.name }} ${{ inputs.email }} ${{ inputs.registry }} ${{ inputs.push }}

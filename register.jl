@@ -4,6 +4,12 @@ using RegistryTools
 using HTTP: URI
 using LibGit2
 
+# ARGS
+# 1. inputs.name
+# 2. inputs.email
+# 3. inputs.registry
+# 4. inputs.push
+
 pkg_url = String(readchomp(`git remote get-url origin`))
 println("::info::Repository = $pkg_url")
 
@@ -16,7 +22,7 @@ println("::info::Project version = $(project.version)")
 tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
 println("::info::Tree hash = $tree_hash")
 
-const private_reg_url = GitTools.normalize_url("${{ inputs.registry }}")
+const private_reg_url = GitTools.normalize_url(ARGS[3])
 const general_reg_url = "https://github.com/JuliaRegistries/General"
 println("::info::Registry = $private_reg_url")
 
@@ -31,12 +37,12 @@ cd(mktempdir()) do
     regbranch = RegistryTools.register(pkg_url, project, tree_hash;
         registry=private_reg_url,
         registry_deps=[general_reg_url],
-        push=${{inputs.push}},
+        push=parse(Bool, ARGS[4]),
         branch=branch,
         gitconfig=Dict(
-            "user.name" => "${{ inputs.name }}",
-            "user.email" => "${{ inputs.email }}",
-            "url.$(string(URI(URI(private_reg_url); userinfo="${{ inputs.name }}:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
+            "user.name" => ARGS[1],
+            "user.email" => ARGS[2],
+            "url.$(string(URI(URI(private_reg_url); userinfo="$(ARGS[1]):$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
         ))
     println("::info::RegBranch = $regbranch")
 
