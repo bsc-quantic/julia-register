@@ -20,7 +20,7 @@ pkg_url = String(readchomp(`git remote get-url origin`))
 
 project = RegistryTools.Project("Project.toml")
 isnothing(project) && error("Project file not found")
-@info "Project" name = project.name UUID = $(project.uuid) version = project.version
+@info "Project" name = project.name UUID = project.uuid version = project.version
 
 commit_hash = String(readchomp(`git rev-parse HEAD`))
 tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
