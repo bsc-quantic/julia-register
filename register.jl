@@ -75,7 +75,7 @@ cd(mktempdir()) do
 
     auth = GitHub.authenticate(ENV["GITHUB_TOKEN"])
     pr = GitHub.create_pull_request(registry, auth=auth, params=params)
-    GitHub.add_labels(repo, pr, lowercase.(regbranch.metadata["labels"]), auth=auth)
+    GitHub.add_labels(registry, pr, lowercase.(regbranch.metadata["labels"]), auth=auth)
 end
 
 open(ENV["GITHUB_OUTPUT"], "w") do io
