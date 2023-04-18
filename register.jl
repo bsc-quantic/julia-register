@@ -16,29 +16,24 @@ registry, name, email, push, actor = ARGS
 push = parse(Bool, push)
 
 pkg_url = String(readchomp(`git remote get-url origin`))
-println("::info::Repository = $pkg_url")
+@info "Repository = $pkg_url"
 
 project = RegistryTools.Project("Project.toml")
 isnothing(project) && error("Project file not found")
-println("::info::Project name = $(project.name)")
-println("::info::Project UUID = $(project.uuid)")
-println("::info::Project version = $(project.version)")
+@info "Project" name = project.name UUID = $(project.uuid) version = project.version
 
 commit_hash = String(readchomp(`git rev-parse HEAD`))
-println("::info::Commit hash = $commit_hash")
-
 tree_hash = String(readchomp(`git rev-parse HEAD^\{tree\}`))
-println("::info::Tree hash = $tree_hash")
+@info "Hash" commit = commit_hash tree = tree_hash
 
 const private_reg_url = GitTools.normalize_url(string(repo(registry).html_url))
 const general_reg_url = "https://github.com/JuliaRegistries/General"
-println("::info::Registry = $private_reg_url")
 
 registry_repo = RegistryTools.get_registry(private_reg_url; force_reset=false)
-println("::info::Registry path = $registry_repo")
 
 const branch = get(ENV, "INPUTS_BRANCH", RegistryTools.registration_branch(project; url=pkg_url))
-println("::info::Registry branch = $branch")
+
+@info "Registry" url = private_reg_url path = registry_repo branch = branch
 
 cd(mktempdir()) do
     # adapted from fregante/setup-git-user@v1, https://stackoverflow.com/a/71984173
@@ -52,7 +47,7 @@ cd(mktempdir()) do
             "user.email" => email,
             "url.$(string(URI(URI(private_reg_url); userinfo="$name:$(ENV["GITHUB_TOKEN"])"))).insteadOf" => private_reg_url
         ))
-    println("::info::RegBranch = $regbranch")
+    @info "RegBranch = $regbranch"
 
     if haskey(regbranch.metadata, "error")
         if regbranch.metadata["kind"] == "New version" && regbranch.metadata["error"] == "Version $(project.version) already exists"
@@ -74,6 +69,7 @@ cd(mktempdir()) do
         commit=commit_hash,
         release_notes="",
     )
+    @info "Pull Request contents" title = title body = body
 
     pr = GitHub.create_pull_request(
         registry;
