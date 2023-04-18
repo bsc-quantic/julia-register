@@ -66,7 +66,7 @@ cd(mktempdir()) do
         registration_type=get(regbranch.metadata, "kind", ""),
         package=project.name,
         repo=pkg_url,
-        user=actor,
+        user="@$actor",
         version=project.version,
         commit=commit_hash,
         release_notes="",
