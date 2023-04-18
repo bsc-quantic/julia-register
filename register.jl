@@ -73,7 +73,7 @@ cd(mktempdir()) do
     )
     @info "Pull Request contents" title = params["title"] body = params["body"]
 
-    auth = Registrator.get_user_auth()
+    auth = Registrator.CommentBot.get_user_auth()
     pr = GitHub.create_pull_request(registry, auth=auth, params=params)
     GitHub.add_labels(repo, pr, lowercase.(regbranch.metadata["labels"]), auth=auth)
 end
