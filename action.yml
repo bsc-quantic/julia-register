@@ -47,7 +47,7 @@ runs:
     - name: Install dependencies
       shell: bash
       run: |
-        julia -e '
+        julia --color=yes -e '
           using Pkg
           Pkg.add("RegistryTools")
           Pkg.add("Registrator")
@@ -57,4 +57,4 @@ runs:
     - name: Register package
       id: register-package
       shell: bash
-      run: julia ${{ github.action_path }}/register.jl ${{ inputs.registry }} ${{ inputs.name }} ${{ inputs.email }} ${{ inputs.push }} ${{ github.actor }}
+      run: julia --color=yes ${{ github.action_path }}/register.jl ${{ inputs.registry }} ${{ inputs.name }} ${{ inputs.email }} ${{ inputs.push }} ${{ github.actor }}
