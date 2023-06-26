@@ -45,15 +45,13 @@ runs:
   using: "composite"
   steps:
     - name: Install dependencies
-      shell: bash
+      shell: julia --color=yes {0}
       run: |
-        julia --color=yes -e '
-          using Pkg
-          Pkg.add("RegistryTools")
-          Pkg.add("Registrator")
-          Pkg.add("GitHub")
-          Pkg.add("HTTP")
-        '
+        using Pkg
+        Pkg.add("RegistryTools")
+        Pkg.add("Registrator")
+        Pkg.add("GitHub")
+        Pkg.add("HTTP")
     - name: Register package
       id: register-package
       shell: bash
